@@ -11,7 +11,7 @@
     "start": "node server.js",
     "watch": "nodemon server.js",
     "test": "./node_modules/.bin/mocha -u bdd",
-    "postinstall": "gulp build"
+    "postinstall": "bower install && gulp build"
   },
   "repository": {
     "type": "git",
