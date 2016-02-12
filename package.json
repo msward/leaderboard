@@ -2,6 +2,10 @@
   "name": "leaderboard",
   "version": "0.0.0",
   "description": "Test Leaderboard app for Shawnee tribe",
+  "engines": {
+    "node": "5.5.0",
+    "npm": "3.5.3"
+  }
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
