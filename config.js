@@ -1,3 +1,3 @@
 module.exports = {
-  database: process.env.XMONGO_URI || 'localhost:27017/leaderboard'
+  database: process.env.MONGO_URI || 'localhost:27017/leaderboard'
 };
