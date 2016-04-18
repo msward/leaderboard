@@ -611,7 +611,26 @@ var Home = function (_React$Component) {
       return _react2.default.createElement(
         'div',
         { className: 'alert alert-info' },
-        'Hello from the Shawnee Tribe Home Component'
+        'Hello from the Shawnee Tribe Home Component',
+        _react2.default.createElement(
+          'div',
+          { className: 'col-sm-7 hidden-xs' },
+          _react2.default.createElement(
+            'h3',
+            { className: 'lead' },
+            _react2.default.createElement(
+              'strong',
+              null,
+              'Leaderboard'
+            ),
+            'Events'
+          ),
+          _react2.default.createElement(
+            'ul',
+            { className: 'list-inline' },
+            'This is where the events would go!'
+          )
+        )
       );
     }
   }]);
