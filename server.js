@@ -342,45 +342,57 @@ app.put('/api/score', function(req, res, next) {
   var metakey = req.body.metakey;
   var metavalue = req.body.metavalue;
   var scoreId = req.body.scoreId;
-  var score2 = new Score({
-     eventId: eventId,
-     score: {
-        kind: kind,
-        value: score,
-        metadata:[{
-          key: metakey,
-          value: metavalue
-        }]
-     }
-  });
   try {
-    Score.findByIdAndUpdate(
-        scoreId,
-        {$set: 
-           {
-        	 kind: kind, 
-             value: score
-           },
-	     $push:
-	       {
-	         metadata: {
-	            $each: [ { key: metakey, value: metavalue }]
-	         }
-	       }
-	    },      
-        {safe: true, upsert: true, new: true},
-        function(err, model) {
-           if (!err) {
-              if (!model) {
-                 res.status(200).send({model});
-              } else {
-            	 res.status(200).send({message: 'ok'});
-              }
-           } else {
-        	   res.status(503).send({message: 'something went bye bye'});
-           }
-        }
-    );
+	console.log(metakey);
+	if (metakey !=null && metavalue != null) {
+		var newMeta = "{key: "+metakey+", value: "+metavalue+"}";
+		console.log(newMeta);
+	    Score.findByIdAndUpdate(
+	        scoreId,
+	        {$set: 
+	           {
+	        	 kind: kind, 
+	             value: score,
+	        	 "metadata": [ {key: metakey, value: metavalue} ]
+	           }
+		    }, 
+		    {safe: true, upsert: true, new: true},
+	        function(err, model) {
+	           if (!err) {
+	              if (!model) {
+	                 res.status(200).send({model});
+	              } else {
+	            	 res.status(200).send({message: 'ok'});
+	              }
+	           } else {
+	        	   res.status(503).send({message: 'something went bye bye'});
+	           }
+	        }
+	    );
+	} else {
+		console.log('wut?');
+	    Score.findByIdAndUpdate(
+	        scoreId,
+	        {$set: 
+	           {
+	        	 kind: kind, 
+	             value: score
+	           }
+		    },      
+	        {safe: true, upsert: true, new: true},
+	        function(err, model) {
+	           if (!err) {
+	              if (!model) {
+	                 res.status(200).send({model});
+	              } else {
+	            	 res.status(200).send({message: 'ok'});
+	              }
+	           } else {
+	        	   res.status(503).send({message: 'something went bye bye'});
+	           }
+	        }
+	    );		
+	}
   } catch (e) {
     res.status(404).send({ message: 'error '+e });
   }
