@@ -21,6 +21,7 @@ var config = require('./config');
 var async = require('async');
 var request = require('request');
 var xml2js = require('xml2js');
+var cors = require('cors');
 
 var app = express();
 
@@ -33,11 +34,19 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(cors());
+
+app.use(function(req, res, next) {
+   res.header("Access-Control-Allow-Origin", "icfworkshops.com");
+   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+   next();
+});
+
 
 app.get('/api/initialize', function(req, res, next) {
   try {
 	  var shawnee = new Nation({
-	     name: "Shawnee"
+	     name: "Chickahominy"
 	  });
 	  shawnee.save(function(err) {
 	     if (err) return next(err);
@@ -75,7 +84,7 @@ app.post('/api/import', function(req, res, next) {
 
    
    // After the import, initialize all tribes with nation
-   Nation.findOne({name:'Shawnee'}, function(err, nation) {
+   Nation.findOne({name:'Chickahominy'}, function(err, nation) {
       if (err) return next(err);
       if (nation) {
     	  Tribe.update({}, { $set: { nationId: nation._id }}).exec();    	  
