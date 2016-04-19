@@ -36,8 +36,13 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors());
 
+var corsOptions = {
+   origin: 'http://yprincess.icfworkshops.com'
+};
+		 
+
 app.use(function(req, res, next) {
-   res.header("Access-Control-Allow-Origin", "icfworkshops.com");
+   res.header("Access-Control-Allow-Origin", "*.icfworkshops.com");
    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
    next();
 });
@@ -282,7 +287,7 @@ app.get('/api/initialscores', function(req, res, next) {
  * GET /api/events/
  * Gets list of events
  */
-app.get('/api/events', function(req, res, next) {
+app.get('/api/events', cors(corsOptions), function(req, res, next) {
   Event.find().lean().exec(function (err, events) {
       return res.end(JSON.stringify(events));
   });
@@ -305,7 +310,7 @@ app.get('/api/scores/:tribe/:event', function(req, res, next) {
   });
 });
 
-app.get('/api/scores/:tribe', function(req, res, next) {
+app.get('/api/scores/:tribe', cors(corsOptions), function(req, res, next) {
   var tribeId = req.params.tribe;
   var eventId = req.params.event;
   Princess.find({tribe: tribeId})
@@ -321,7 +326,7 @@ app.get('/api/scores/:tribe', function(req, res, next) {
   });
 });
 
-app.get('/api/editscore/:event/:princess', function(req, res, next) {
+app.get('/api/editscore/:event/:princess', cors(corsOptions), function(req, res, next) {
   var princess = req.params.princess;
   var event = req.params.event;
   Score.find({eventId: event})
@@ -343,7 +348,8 @@ app.get('/api/editscore/:event/:princess', function(req, res, next) {
  * POST /api/score
  *
  */
-app.put('/api/score', function(req, res, next) {
+app.options('/api/score', cors());
+app.put('/api/score', cors(corsOptions), function(req, res, next) {
   var eventId = req.body.eventId;
   var princessId = req.body.princessId;
   var score = req.body.score;
