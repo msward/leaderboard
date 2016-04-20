@@ -48,12 +48,12 @@ app.use(function(req, res, next) {
 });
 
 
-app.get('/api/initialize', function(req, res, next) {
+app.get('/api/init/nation', function(req, res, next) {
   try {
-	  var shawnee = new Nation({
+	  var chick = new Nation({
 	     name: "Chickahominy"
 	  });
-	  shawnee.save(function(err) {
+	  chick.save(function(err) {
 	     if (err) return next(err);
 	  });
 	  var archery = new Event({
@@ -77,7 +77,7 @@ app.get('/api/initialize', function(req, res, next) {
   }
 });
 
-app.post('/api/import', function(req, res, next) {
+app.post('/api/import/tribe', function(req, res, next) {
 	
    var data = req.body;
    var tribeName;
@@ -92,49 +92,52 @@ app.post('/api/import', function(req, res, next) {
    Nation.findOne({name:'Chickahominy'}, function(err, nation) {
       if (err) return next(err);
       if (nation) {
-    	  Tribe.update({}, { $set: { nationId: nation._id }}).exec();    	  
+    	  Tribe.find({}, function(err, tribes) {
+    		  tribes.forEach(function(tribe) {    	  
+    	         Tribe.findByIdAndUpdate(tribe._id, { $set: { nationId: nation }}).exec();
+    		  });
+    	  });
       };
    });
-   
-   // After the import, initialize all scores for all events for all princesses
-   Event.find({}, function(err, events) {
-      var userMap = {};
-      events.forEach(function(event) {
-         insertScores(event);
-      });
-   });
-   
-   function insertScores(event) {
-	  console.log('Inserting scores for '+event.name);
-	  Princess.find({}, function(err, princesses) {
-		  console.log(princesses);
-		  princesses.forEach(function(aPrincess) {
-			  console.log('princess='+aPrincess.moniker);
-			  console.log('new score for '+event.name+' with '+event.scoring);
-		      var score = new Score({
-		         eventId: event._id,
-		         kind: event.scoring
-		      });
-		      score.save(function(err) {
-		          if (err) { 
-		        	  console.log('asdfasdflkfsdklsdflkjsdfljksdf '+err);
-		        	  return next(err);
-		          }
-		      });
-		      Princess.update({_id: aPrincess._id },
-		         { $push:
-		            {
-		              scores:  score 
-		            }
-		         },
-		         function(err) {
-		            if (err) {
-			        	console.log('uioriuoriourweiouerwiouerw '+err);
-		            	return next(err);
-		            }
-		      });
-		  });
-	  });
+
+   function insertScores(event, tribeName) {
+	  console.log('Inserting scores for event '+event.name);
+	  console.log('Inserting scores for tribe '+tribeName);
+	  Tribe.find({name: tribeName})
+	     .exec(function (err, tribe) {
+		      if (err) {
+		    	  console.log('error finding one tribe during insert scores '+err); 
+		    	  return next(err);
+		      }
+	    	  Princess.find({"tribe._id": tribe._id}, function(err, girls) {
+	    		  girls.forEach(function(aPrincess) {
+	    			  var currentId = aPrincess.tribe;
+	    		      var score = new Score({
+	    		         eventId: event._id,
+	    		         kind: event.scoring
+	    		      });
+	    		      score.save(function(err) {
+	    		          if (err) { 
+	    		        	  console.log('error saving score '+err);
+	    		        	  return next(err);
+	    		          }
+	    		      });
+	    		      Princess.findByIdAndUpdate(aPrincess._id,
+	    		         { $push:
+	    		            {
+	    		              scores:  score 
+	    		            }
+	    		         },
+	    		         {upsert: false},
+	    		         function(err) {
+	    		            if (err) {
+	    			        	console.log('error save scores for princess '+err);
+	    		            	return next(err);
+	    		            }
+	    		      });
+	    		  });
+	    	  });
+	      });
    };	   
    
    // This high-order function is invoked for any need to import or update a tribe.
@@ -154,7 +157,7 @@ app.post('/api/import', function(req, res, next) {
        		      moniker: jobj['Princess Name'],
        		      birthday: new Date(jobj['Birthday']),
        		      gender: "female",
-       		      tribe: tribe._id
+       		      tribe: tribe
        		   });		  
        		   princess.save(function(err) {
        		      if (err) return next(err);
@@ -166,122 +169,49 @@ app.post('/api/import', function(req, res, next) {
    res.status(200).send(data);
 });
 
-app.get('/api/initialscores', function(req, res, next) {
+app.post('/api/init/scores', function(req, res, next) {
+   
+   // After the import, initialize all scores for all events for all princesses
+   Event.find({}, function(err, events) {
+      var userMap = {};
+      events.forEach(function(event) {
+         insertScores(event);
+      });
+   });
+   
+   function insertScores(event) {
+	  Princess.find({}, function(err, girls) {
+		  girls.forEach(function(aPrincess) {
+		      var score = new Score({
+		         eventId: event._id,
+		         kind: event.scoring
+		      });
+		      score.save(function(err) {
+		          if (err) { 
+		        	  console.log('error saving score '+err);
+		        	  return next(err);
+		          }
+		      });
+		      Princess.findByIdAndUpdate(aPrincess._id,
+		         { $push:
+		            {
+		              scores:  score 
+		            }
+		         },
+		         {upsert: false},
+		         function(err) {
+		            if (err) {
+			        	console.log('error save scores for princess '+err);
+		            	return next(err);
+		            }
+		      });
+		  });
+	  });
+   };	   
 
-   var archery = new Event({
-      name: 'Archery'
-   });
-   var riflery = new Event({
-      name: 'Riflery'
-   });
-   var canoeing = new Event({
-      name: 'Canoeing'
-   });
-   archery.save();
-   riflery.save();
-   canoeing.save();
-
-   function getPrincessIdByMoniker(moniker, callback) {
-     Tribe.findOne({name:'Barking Spider'}, function(err, tribe) {
-       if (err) return next(err);
-       if (!tribe) {
-         res.status(404).send({message: 'no bark in bite'});
-       }
-       Princess.findOneAndUpdate({moniker: moniker}, {tribe: tribe}, function(err, princess) {
-          callback(princess);
-       });
-     });
-   };
-
-   getPrincessIdByMoniker("Golden Butterfly", function(princess) {
-      var score1 = new Score({
-         eventId: archery._id,
-            kind: 'points',
-            value: '156',
-            metadata: [{
-              key: 'bullseyes',
-              value: '2'
-            }]
-      });
-      var score2 = new Score({
-         eventId: riflery._id,
-            kind: 'points',
-            value: '48',
-            metadata:[{
-              key: 'bullseyes',
-              value: '1'
-            }]
-      });
-      var score3 = new Score({
-         eventId: canoeing._id,
-            kind: 'time',
-            value: '1:0:0:001'
-      });
-      score1.save(function(err) {
-          if (err) return next(err);
-      });
-      score2.save(function(err) {
-          if (err) return next(err);
-      });
-      score3.save(function(err) {
-          if (err) return next(err);
-      });
-      Princess.update({_id: princess._id},
-         { $set:
-            {
-              scores: [ score1, score2, score3 ]
-            }
-         },
-         function(err) {
-            if (err) return next(err);
-      });
-   });
-
-   getPrincessIdByMoniker("Fluttering Ladybug", function(princess) {
-      var score1 = new Score({
-         eventId: archery._id,
-            kind: 'points',
-            value: '63',
-            metadata: [{
-              key: 'bullseyes',
-              value: '4'
-            }]
-      });
-      var score2 = new Score({
-         eventId: riflery._id,
-            kind: 'points',
-            value: '55',
-            metadata: [{
-              key: 'bullseyes',
-              value: '3'
-            }]
-      });
-      var score3 = new Score({
-         eventId: canoeing._id,
-            kind: 'time',
-            value: '1:0'
-      });
-      score1.save(function(err) {
-          if (err) return next(err);
-      });
-      score2.save(function(err) {
-          if (err) return next(err);
-      });
-      score3.save(function(err) {
-          if (err) return next(err);
-      });
-      Princess.update({_id: princess._id},
-         { $set:
-            {
-              scores: [ score1, score2, score3 ]
-            }
-         },
-         function(err) {
-            if (err) return next(err);
-      });
-   });
-   res.status(200).send({message: 'ok'});
+   res.status(200).send("ok");
 });
+
 
 /**
  * GET /api/events/
@@ -310,6 +240,38 @@ app.get('/api/scores/:tribe/:event', function(req, res, next) {
   });
 });
 
+app.get('/api/tribe', cors(corsOptions), function(req, res, next) {
+  var tribeId = req.params.tribe;
+  Tribe.find()
+      .populate({
+    	  path: 'nationId',
+    	  ref: 'Nation'
+      })
+      .exec(function (err, tribes) {
+         if (!err) {
+	        return res.end(JSON.stringify(tribes));
+	     } else {
+	    	res.status(503).send({message:'bad' +err});  
+	     };
+  });
+});
+
+app.get('/api/tribe/:tribe', cors(corsOptions), function(req, res, next) {
+  var tribeId = req.params.tribe;
+  Tribe.findById(tribeId)
+      .populate({
+    	  path: 'nationId',
+    	  ref: 'Nation'
+      })
+      .exec(function (err, tribes) {
+         if (!err) {
+	        return res.end(JSON.stringify(tribes));
+	     } else {
+	    	res.status(503).send({message:'bad' +err});  
+	     };
+  });
+});
+
 app.get('/api/scores/:tribe', cors(corsOptions), function(req, res, next) {
   var tribeId = req.params.tribe;
   var eventId = req.params.event;
@@ -321,8 +283,13 @@ app.get('/api/scores/:tribe', cors(corsOptions), function(req, res, next) {
              model: 'Event'
          } 
       })
+      .populate('tribe', 'name')   
       .exec(function (err, princesses) {
-      return res.end(JSON.stringify(princesses));
+         if (!err) {
+	        return res.end(JSON.stringify(princesses));
+	     } else {
+	    	res.status(503).send({message:'bad' +err});  
+	     };
   });
 });
 
@@ -385,7 +352,6 @@ app.put('/api/score', cors(corsOptions), function(req, res, next) {
 	        }
 	    );
 	} else {
-		console.log('wut?');
 	    Score.findByIdAndUpdate(
 	        scoreId,
 	        {$set: 
