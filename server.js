@@ -267,7 +267,7 @@ app.get('/api/tribe/:tribe', cors(corsOptions), function(req, res, next) {
          if (!err) {
 	        return res.end(JSON.stringify(tribes));
 	     } else {
-	    	res.status(503).send({message:'bad' +err});  
+	    	res.status(503).send({message: err});  
 	     };
   });
 });
@@ -288,7 +288,7 @@ app.get('/api/scores/:tribe', cors(corsOptions), function(req, res, next) {
          if (!err) {
 	        return res.end(JSON.stringify(princesses));
 	     } else {
-	    	res.status(503).send({message:'bad' +err});  
+	    	res.status(503).send({message: err});  
 	     };
   });
 });
@@ -312,7 +312,7 @@ app.get('/api/editscore/:event/:princess', cors(corsOptions), function(req, res,
 });
 
 /**
- * POST /api/score
+ * PUT /api/score
  *
  */
 app.options('/api/score', cors());
@@ -377,48 +377,6 @@ app.put('/api/score', cors(corsOptions), function(req, res, next) {
   } catch (e) {
     res.status(404).send({ message: 'error '+e });
   }
-});
-
-
-//  Princess.findByIdAndUpdate(
-//        princessId,
-//        {$push: {"scores": {eventId: eventId, "score": {kind: kind, score: score}}}},
-//        {safe: true, upsert: true, new : true},
-//        function(err, model) {
-//            console.log(err);
-//        }
-//    );
-/**
- * POST /api/princess
- * Adds new princess to the database.
- */
-app.post('/api/princess', function(req, res, next) {
-  var gender = req.body.gender;
-  var princessName = req.body.name;
-  var birthday = req.body.birthday;
-          try {
-            var princessId = '' + Math.floor((Math.random() * 8));
-            var princess = new Princess({
-              princessId: princessId,
-              name: princessName,
-              birthday: new Date(birthday),
-              gender: gender
-            });
-            princess.save(function(err) {
-              if (err) return next(err);
-              res.send({ message: princessName + ' has been added successfully!' });
-            }); 
-          } catch (e) {
-            res.status(404).send({ message: princessName + ' resulted in some error! '+e });
-          }
-});
-
-/**
- * GET /api/princesses
- * Returns 2 random characters of the same gender that have not been voted yet.
- */
-app.get('/api/princesses', function(req, res, next) {
-            res.send([]);
 });
 
 app.use(function(req, res) {
