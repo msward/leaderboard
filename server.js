@@ -272,6 +272,25 @@ app.get('/api/tribe/:tribe', cors(corsOptions), function(req, res, next) {
   });
 });
 
+app.get('/api/scores', cors(corsOptions), function(req, res, next) {
+  Princess.find()
+      .populate({
+         path: 'scores',
+         populate: {
+            path: 'eventId',
+             model: 'Event'
+         } 
+      })
+      .populate('tribe', 'name')   
+      .exec(function (err, princesses) {
+         if (!err) {
+	        return res.end(JSON.stringify(princesses));
+	     } else {
+	    	res.status(503).send({message: err});  
+	     };
+  });
+});
+
 app.get('/api/scores/:tribe', cors(corsOptions), function(req, res, next) {
   var tribeId = req.params.tribe;
   var eventId = req.params.event;
